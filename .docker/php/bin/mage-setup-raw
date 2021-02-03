@@ -1,0 +1,51 @@
+#!/bin/sh
+echo "Initializing setup..."
+
+cd /var/www/html
+
+rm -rf .keep
+
+
+if [ -f ./app/etc/config.php ] || [ -f ./app/etc/env.php ]; then
+  echo "It appears Magento is already installed (app/etc/config.php or app/etc/env.php exist). Exiting setup..."
+  exit
+fi
+
+/usr/local/bin/php /usr/local/bin/composer create-project --repository-url=https://repo.magento.com/ magento/project-community-edition=$M2SETUP_VERSION .
+
+ln -s /var/www/.composer ./var/composer_home
+
+chmod +x ./bin/magento
+
+
+echo "Running Magento 2 setup script..."
+/usr/local/bin/php ./bin/magento setup:install \
+  --db-host=$M2SETUP_DB_HOST \
+  --db-name=$M2SETUP_DB_NAME \
+  --db-user=$M2SETUP_DB_USER \
+  --db-password=$M2SETUP_DB_PASSWORD \
+  --base-url=$M2SETUP_BASE_URL \
+  --admin-firstname=$M2SETUP_ADMIN_FIRSTNAME \
+  --admin-lastname=$M2SETUP_ADMIN_LASTNAME \
+  --admin-email=$M2SETUP_ADMIN_EMAIL \
+  --admin-user=$M2SETUP_ADMIN_USER \
+  --admin-password=$M2SETUP_ADMIN_PASSWORD \
+  --backend-frontname=$M2SETUP_BACKEND_FRONTNAME \
+  --search-engine=elasticsearch7 \
+  --elasticsearch-host=$M2SETUP_ELASTICSEARCH_HOST \
+  --elasticsearch-port=9200 \
+  --cache-backend=redis \
+  --cache-backend-redis-server=m2-redis \
+  --cache-backend-redis-db=0 \
+  --page-cache=redis \
+  --page-cache-redis-server=m2-redis \
+  --page-cache-redis-db=1
+
+  
+
+/usr/local/bin/php ./bin/magento setup:upgrade
+/usr/local/bin/php ./bin/magento setup:di:compile
+/usr/local/bin/php ./bin/magento module:disable Magento_TwoFactorAuth
+/usr/local/bin/php ./bin/magento cache:flush
+
+echo "The setup script has completed execution."

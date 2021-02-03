@@ -1,0 +1,153 @@
+version: "3.1"
+
+services:
+  app:
+    build:
+      context: .docker/nginx/
+    container_name: m2-nginx
+    depends_on:
+      - m2-db
+      - m2-phpfpm
+      - m2-redis
+      - m2-mailcatcher
+      - m2-elasticsearch
+      - m2-kibana
+    links:
+      - m2-db
+      - m2-phpfpm
+      - m2-elasticsearch
+      - m2-kibana
+    volumes: &appvolumes
+      - ./m2:/var/www/html
+      - ./.composer:/var/www/.composer
+      - $HOME/.ssh/id_rsa:/root/.ssh/id_rsa
+      - $HOME/.ssh/id_rsa:/var/www/.ssh/id_rsa
+      - $HOME/.ssh/known_hosts:/var/www/.ssh/known_hosts
+    ports:
+      - 80
+      - 443
+    networks: &appnetworks
+      www:
+        ipv4_address: 172.33.0.5
+    env_file: .env/nginx.env
+
+  m2-phpfpm:
+    build:
+      context: .docker/php/
+    image: phpfpm:7.4.8
+    container_name: m2-phpfpm
+    depends_on:
+      - m2-db
+      - m2-elasticsearch
+    links:
+      - m2-db
+      - m2-elasticsearch
+    ports:
+      - 9000
+    volumes: *appvolumes
+    networks:
+      www:
+        ipv4_address: 172.33.0.6
+    env_file: .env/php.env
+
+  m2-db:
+    image: mysql:5.7
+    container_name: m2-db
+    volumes:
+      - ./dbdata/mysql:/var/lib/mysql
+    ports:
+      - 3306
+    networks:
+      www:
+        ipv4_address: 172.33.0.7
+    env_file: .env/mysql.env
+
+  setup:
+    build:
+      context: .docker/php/
+    image: phpfpm:7.4.8
+    container_name: m2-setup
+    command: /usr/local/bin/mage-setup
+    depends_on:
+      - m2-db
+      - m2-elasticsearch
+      - m2-kibana
+    links:
+      - m2-db
+      - m2-elasticsearch
+      - m2-kibana
+    volumes: *appvolumes
+    networks:
+      www:
+        ipv4_address: 172.33.0.8
+    env_file: .env/setup.env
+
+  m2-redis:
+    build: ./.docker/redis
+    image: redis:5.0.8
+    container_name: m2-redis
+    ports:
+      - 6379
+      - 1985
+    volumes:
+     - $PWD/dbdata/redis-data:/data
+     - $PWD/.docker/redis/conf/redis.conf:/usr/local/etc/redis/redis.conf
+    environment:
+     - REDIS_REPLICATION_MODE=master      
+    networks:
+      www:
+        ipv4_address: 172.33.0.12
+
+  m2-mailcatcher:
+     build: ./.docker/mailcatcher
+     container_name: m2-mailcatcher
+     image: mailcatcher:0.7.1
+     ports:
+       - 1080
+       - 1025
+     networks:
+       www:
+         ipv4_address: 172.33.0.11
+
+  m2-elasticsearch:
+     image: elasticsearch:7.6.2
+     container_name: m2-elasticsearch
+     environment:
+      - cluster.name=magento2-es
+      - discovery.type=single-node
+      - bootstrap.memory_lock=true    
+      - "ES_JAVA_OPTS=-Xms4G -Xmx4G"
+     ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+      nproc: 3000
+      nofile: 65536      
+     volumes:      
+      - ./dbdata/elasticdata:/usr/share/elasticsearch/data
+     ports:
+       - 9200
+       - 9300
+     networks:
+       www:
+         ipv4_address: 172.33.0.9
+  m2-kibana:
+    image: docker.elastic.co/kibana/kibana:7.6.2
+    container_name: m2-kibana
+    depends_on:
+      - m2-elasticsearch
+    links:
+      - m2-elasticsearch
+    environment:
+      SERVER_NAME: kibana.local
+      ELASTICSEARCH_HOSTS: http://m2-elasticsearch:9200
+    networks:
+       www:
+         ipv4_address: 172.33.0.13           
+
+networks:
+  www:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.33.0.0/16
