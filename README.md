@@ -1,4 +1,4 @@
-## Magento 2.4.x in docker
+## Magento 2.4.2 in docker
 
 [![Donate](https://img.shields.io/badge/Donate-PayPal-green.svg)](YOUR_EMAIL_CODE)
 
@@ -24,12 +24,11 @@ The role of this project is to provide a quick development setup for Magento 2 u
 - PHP FPM 7.4.13
 - Mysql 5.7
 - Redis 6.0.9
-- ElasticSearch 7.6.2
-- Kibana 7.6.2
-- Mailcatcher 0.6.4S
-- Composer 1.10.19
+- ElasticSearch 7.9.3
+- Kibana 7.9.3
+- Mailcatcher 0.7.1
+- Composer 2.x
 - XDebug
-- Magento CE 2.4.1 (release at October 15, 2020)
 
 ## Requirements
 Please follow the Docker installation steps from https://docs.docker.com/engine/installation/ and docker compose installation steps from https://docs.docker.com/compose/install/.

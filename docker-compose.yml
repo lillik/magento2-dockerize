@@ -34,7 +34,7 @@ services:
   m2-phpfpm:
     build:
       context: .docker/php/
-    image: phpfpm:7.4.8
+    image: phpfpm:7.4.13
     container_name: m2-phpfpm
     depends_on:
       - m2-db
@@ -84,7 +84,7 @@ services:
 
   m2-redis:
     build: ./.docker/redis
-    image: redis:5.0.8
+    image: redis:6.0.9
     container_name: m2-redis
     ports:
       - 6379
@@ -110,7 +110,7 @@ services:
          ipv4_address: 172.33.0.11
 
   m2-elasticsearch:
-     image: elasticsearch:7.6.2
+     image: elasticsearch:7.9.3
      container_name: m2-elasticsearch
      environment:
       - cluster.name=magento2-es
@@ -132,7 +132,7 @@ services:
        www:
          ipv4_address: 172.33.0.9
   m2-kibana:
-    image: docker.elastic.co/kibana/kibana:7.6.2
+    image: docker.elastic.co/kibana/kibana:7.9.3
     container_name: m2-kibana
     depends_on:
       - m2-elasticsearch
