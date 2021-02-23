@@ -66,7 +66,7 @@ In order to run magento cli command please run command ```./magento.sh [magento 
 
 ## What we have
 * Magento: http://magento2.local
-* Magento: http://magento2.local/admin (**user:** ```admin```; **password:**```AdminMagento```)
+* Magento: http://magento2.local/admin (**user:** ```admin```; **password:**```AdminMagento24```)
 * ElasticSearch: http://172.33.0.9:9200/
 * Kibana: http://172.33.0.13:5601/app/kibana
 * MailCatcher: http://172.33.0.11:1080/
